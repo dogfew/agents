@@ -13,8 +13,8 @@ app.layout = html.Div([
     dcc.Slider(id='max_hz', min=0, max=24, value=0, step=1),
     html.P(["samples:    ", dcc.Input(id='num', type='number', min=2, max=1024, step=2, value=64, debounce=True)]),
     html.P(["Bias:       ", dcc.Input(id='bias', type='number', min=-5, max=5, value=0, debounce=True)]),
-    html.P(["Amplitudes: ", dcc.Input(type='text', value='1 1 1', id='amplitudes', debounce=True), ]),
-    html.P(["Phases:     ", dcc.Input(type='text', value='1.57 0 0.42', id='phases', debounce=True), ]),
+    html.P(["Amplitudes: ", dcc.Input(type='text', value='1 0 2 1.5', id='amplitudes', debounce=True), ]),
+    html.P(["Phases:     ", dcc.Input(type='text', value='1.57 0 0.42 0.2', id='phases', debounce=True), ]),
 ])
 
 
