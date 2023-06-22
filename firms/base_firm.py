@@ -18,6 +18,7 @@ class BaseFirm:
                  deprecation_steps=10,
                  sale_percent=0.9,
                  deprecation_array=None,
+                 invest_anyway=True
                  ):
         """
         :param tech_matrix: Технологическая матрица (Затраты-1 ед. Выпуск)
@@ -29,6 +30,7 @@ class BaseFirm:
         :param deprecation_steps: количество шагов, пока основной капитал не пропадёт
         :attribute reserves: Объём запасов фирмы
         """
+        self.invest_anyway = invest_anyway
         self.tech_matrix = tech_matrix
         self.out_matrix = out_matrix
         self.invest_matrix = invest_matrix
@@ -192,7 +194,8 @@ class BaseFirm:
         """
         Инвестиции фирмы
         """
-        self.history['max_delta_limit'] = np.maximum(self.history['max_delta_limit'], 1)
+        if self.invest_anyway:
+            self.history['max_delta_limit'] = np.maximum(self.history['max_delta_limit'], 1)
         _, soft_delta_limit = self.test_investment(self.reserves)
         delta_limit = np.floor(soft_delta_limit).astype(int)
         self.reserves -= delta_limit * self.invest_matrix

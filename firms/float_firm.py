@@ -18,10 +18,20 @@ class ComplexFirm(BaseFirm):
                  production_rate=0.8,
                  sale_percent=1.,
                  min_limit=0,
-                 prod_name=None
+                 prod_name=None,
+                 invest_anyway=True
                  ):
-        super().__init__(tech_matrix, out_matrix, invest_matrix, financial_resources, limit, id_, is_deprecating,
-                         deprecation_steps, sale_percent)
+        super().__init__(tech_matrix,
+                         out_matrix,
+                         invest_matrix,
+                         financial_resources,
+                         limit,
+                         id_,
+                         is_deprecating,
+                         deprecation_steps,
+                         sale_percent,
+                         None,
+                         invest_anyway)
         self.profit_rate = profit_rate
         self.production_rate = production_rate
         self.investment_rate = np.float64(1.) - self.production_rate
@@ -132,8 +142,24 @@ class ComplexSellFirm(ComplexFirm):
                  production_rate=0.8,
                  sale_percent=1.,
                  min_limit=0,
-                 prod_name=None
+                 prod_name=None,
+                 invest_anyway=True
                  ):
+        super().__init__(tech_matrix,
+                         out_matrix,
+                         invest_matrix,
+                         financial_resources,
+                         limit,
+                         id_,
+                         is_deprecating,
+                         deprecation_steps,
+                         profit_rate,
+                         production_rate,
+                         sale_percent,
+                         min_limit,
+                         prod_name,
+                         invest_anyway
+                         )
         super().__init__(tech_matrix, out_matrix, invest_matrix,
                          financial_resources, limit, id_,
                          is_deprecating, deprecation_steps,
@@ -195,12 +221,24 @@ class RegulatedFirm(ComplexFirm):
                  production_rate=0.8,
                  sale_percent=1.,
                  min_limit=0,
-                 prod_name=None
+                 prod_name=None,
+                 invest_anyway=True
                  ):
-        super().__init__(tech_matrix, out_matrix, invest_matrix,
-                         financial_resources, limit, id_,
-                         is_deprecating, deprecation_steps,
-                         profit_rate, production_rate, sale_percent, min_limit, prod_name)
+        super().__init__(tech_matrix,
+                         out_matrix,
+                         invest_matrix,
+                         financial_resources,
+                         limit,
+                         id_,
+                         is_deprecating,
+                         deprecation_steps,
+                         profit_rate,
+                         production_rate,
+                         sale_percent,
+                         min_limit,
+                         prod_name,
+                         invest_anyway
+                         )
         self.history['previous_volumes'] = np.zeros_like(out_matrix)
         self.history['step'] = 0
 

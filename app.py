@@ -1,16 +1,13 @@
-import seaborn as sns
 from matplotlib import pyplot as plt
 from shiny import App, reactive, render, ui
 import numpy as np
 import pandas as pd
 from shinywidgets import register_widget
-import time
 from consumers.base_consumer import BaseConsumer
 from market import Market
 from simulation import Simulation, SimulationGovernment
 from firms import ComplexSellFirm, ComplexFirm, RegulatedFirm
 from io import StringIO
-import shinyswatch
 from asyncio import sleep
 import json
 from warnings import simplefilter
@@ -341,6 +338,7 @@ def server(input, output, session):
                 firm_type = RegulatedFirm
             else:
                 firm_type = ComplexSellFirm if clever_firms() else ComplexFirm
+            print(firm_type)
             limits = np.arange(input.start_limits()[0], input.start_limits()[1] + 1)
             reserves = np.arange(input.start_reserves()[0], input.start_reserves()[1] + 1)
             finances = np.arange(input.start_finances()[0], input.start_finances()[1] + 1)
@@ -362,7 +360,8 @@ def server(input, output, session):
                                      sale_percent=rng.choice(sales_percents),
                                      production_rate=rng.choice(production_rates),
                                      profit_rate=rng.choice(profit_rates) * int(input.finmarket()),
-                                     prod_name=prod_name
+                                     prod_name=prod_name,
+                                     invest_anyway=input.invest_anyway()
                                      )
                     firm.reserves = np.full(n_commodities, rng.choice(reserves), dtype=np.float64)
                     firms.append(firm)

@@ -92,6 +92,7 @@ APP_UI = ui.page_fluid(
                                                             value=(100, 100), min=0, max=100),
                                             ui.input_slider("production_percent", "Доля финансов на производство",
                                                             value=(80, 80), min=0, max=100),
+                                            ui.input_switch("invest_anyway", "Не ограничивать объём инвестиций")
 
                                             ),
                        ui.input_switch('advanced_sliders_market', "Продвинутые настройки рынка", value=False),
