@@ -55,12 +55,13 @@ def server(input, output, session):
         return data
 
     @output
-    @render.table
+    @render.table(index=True)
     def tech_matrix():
         file_text = StringIO(input.tech_matrix())
         data = pd.read_csv(file_text)
         tech_matrix.set(np.array(data))
         prod_names.set(list(data.columns))
+        data.index = data.columns
         data.columns = pd.MultiIndex.from_tuples([('Технологическая матрица', i) for i in data.columns])
         return data
 
@@ -372,13 +373,13 @@ def server(input, output, session):
                              max_price=input.MAX_PRICE()
                              )
             market_._p_matrix = np.ones_like(market_.price_matrix)
-            if input.set_target_price():
+            if input.set_target_price() and input.regulation():
                 market_._p_matrix *= target_price_vector_reactive()
             consumers_ = []
             if input.consumers():
                 consumers_ = [BaseConsumer(utility_matrix=utility_reactive().flatten(), id_=j)
                               for j in range(n_consumers())]
-            if input.set_taxation():
+            if input.set_taxation() and input.regulation():
                 simulation_ = SimulationGovernment(
                     market_,
                     firms,
