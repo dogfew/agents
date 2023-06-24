@@ -3,8 +3,8 @@ import numpy as np
 
 class Market:
     def __init__(self, n_firms: int, n_commodities: int,
-                 min_price: float=0.01,
-                 max_price: float=100):
+                 min_price: float = 0.01,
+                 max_price: float = 100):
         """
         :param n_firms: число фирм
         :param n_commodities: число видов товаров
@@ -121,14 +121,20 @@ class StockMarket:
     def __init__(self, n_firms: int, n_consumers: int):
         self.n_firms: int = n_firms
         self.n_consumers: int = n_consumers
+        self._profits = np.zeros((n_firms, n_consumers))
+        self.shareholders = np.zeros((n_firms, n_consumers))
+        self.profits_history = np.zeros(n_firms)
 
-        self.__profits = np.zeros((n_firms, n_consumers))
-        self.__shareholders = np.zeros((n_firms, n_consumers))
+    @property
+    def weights(self):
+        return self.shareholders / self.shareholders.sum(axis=1)[:, None]
 
     def process_gains(self, consumer_id):
-        gains = self.__profits[:, consumer_id]
-        self.__profits[:, consumer_id] = 0
-        return gains.sum()
+        gains = self._profits[:, consumer_id].sum()
+        self._profits[:, consumer_id] = 0
+        return gains
 
-    def add_profit(self, firm_id):
-        pass
+    def add_profit(self, firm_id, total_profit):
+        self.profits_history[firm_id] = total_profit
+        self._profits[firm_id] += self.weights[firm_id] * total_profit
+

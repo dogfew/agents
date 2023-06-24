@@ -35,7 +35,6 @@ class ComplexFirm(BaseFirm):
         self.profit_rate = profit_rate
         self.production_rate = production_rate
         self.investment_rate = np.float64(1.) - self.production_rate
-        self.profits = 0
         self.production_resources = self.financial_resources * self.production_rate
         self.investment_resources = self.financial_resources * (1 - self.production_rate)
 
@@ -49,7 +48,7 @@ class ComplexFirm(BaseFirm):
         else:
             self.prod_name = prod_name
 
-    def step(self, market):
+    def step(self, market, stock_market=None):
         """
         Шаг фирмы в модели
         :param market: Рынок
@@ -59,17 +58,15 @@ class ComplexFirm(BaseFirm):
         self.financial_resources = 0.
         """Получение выигрышей с рынка"""
         gains = market.process_gains(self.id)  # получить выигрыш с рынка.
-
         self.history['gains'] = gains  # сохранение выигрышей в истории
         self.gains_history.append(gains)
         self.limits_history.append(self.limit)
-        # self.limits_history = self.limits_history[-self.deprecation_steps * 2:]
-        # self.gains_history = self.gains_history[-self.deprecation_steps * 2:]
-
-        # изменение прибылей
-        d_profits = gains * self.profit_rate
-        gains -= d_profits
-        self.profits += d_profits
+        """Распределение прибылей"""
+        if self.profit_rate != 0:
+            total_profit = gains * self.profit_rate
+            gains -= total_profit
+            stock_market.add_profit(firm_id=self.id,
+                                    total_profit=total_profit)
         d_prod_resources = gains * self.production_rate
         d_investment_resources = gains * self.investment_rate
         self.production_resources += d_prod_resources

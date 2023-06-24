@@ -3,6 +3,7 @@ from shiny import ui
 from shinywidgets import output_widget, register_widget
 import shinyswatch
 from warnings import simplefilter
+
 # simplefilter('ignore')
 sns.set_style("whitegrid")
 sns.color_palette('pastel')
@@ -74,7 +75,9 @@ APP_UI = ui.page_fluid(
                                           value="a, b\n2, 2",
                                           height='150px'),
                        ui.output_table("num_firms"),
-                   ),
+                   )),
+               ui.div(
+                   {'style': 'display: flex;margin-left:1%;margin-top:2%;'},
                    ui.div(
                        {'style': 'display: inline-block;margin-left:1%;'},
                        ui.input_switch("klever", "Гладкие цены", True),
@@ -116,12 +119,12 @@ APP_UI = ui.page_fluid(
                        {'style': 'display: block;margin-left:1%;'},
                        ui.input_switch("consumers", "Потребители", value=False),
                        ui.panel_conditional('input.consumers',
-                                            ui.input_slider("n_consumers", "Количество потребителей", value=1, min=0,
+                                            ui.input_slider("n_consumers", "Количество потребителей", value=2, min=0,
                                                             max=10),
                                             ui.input_slider("base_income", "Базовый доход (в благах)",
-                                                            min=0, max=100, value=10),
+                                                            min=0, max=100, value=0),
                                             ui.input_slider("base_income", "Уровень удовлетворения",
-                                                            min=0, max=100, value=10),
+                                                            min=0, max=100, value=0),
                                             ui.div(
                                                 {'style': 'margin-left: 1%; display: flex;'},
                                                 ui.input_text_area("utility", "Функция полезности потребителей",
@@ -129,10 +132,12 @@ APP_UI = ui.page_fluid(
                                                                    height='80px'),
                                                 ui.output_table("utility"),
                                             ),
-                                            ui.input_switch("finmarket", "Финансовый рынок", value=False),
+                                            ui.input_switch("finmarket", "Собственность", value=False),
                                             ui.panel_conditional('input.finmarket',
                                                                  ui.input_slider("profit_rates", "Отчисления в прибыль",
-                                                                                 min=0, max=100, value=(15, 15))
+                                                                                 min=0, max=100, value=(15, 15)),
+                                                                 ui.input_slider("mpc", "MPC",
+                                                                                 min=0, max=100, value=(70, 70))
                                                                  ),
                                             ),
                    ),
@@ -173,7 +178,6 @@ APP_UI = ui.page_fluid(
                                                                  )
                                             ),
                    ),
-
                ),
                ),
         ### графики
@@ -186,11 +190,11 @@ APP_UI = ui.page_fluid(
         ui.nav("Секторальные графики",
                ui.div(
                    # {"style": "display: flex; margin-left: 25%"},
-                   ui.input_slider('window', ui.h5('Размер окна скользящих средних'), min=1, max=10, value=1),
+                   ui.input_slider('window', 'Размер окна скользящих средних', min=1, max=10, value=1),
                ),
-                   ui.panel_main(
-                       output_widget("plotly_widget", height='800px'),
-                   ),
+               # ui.panel_main(
+               output_widget("plotly_widget", height='100%'),
+               # ),
                ),
         ui.nav('Состояние рынка',
                ui.div(
@@ -199,6 +203,13 @@ APP_UI = ui.page_fluid(
                    ui.output_table("market_prices", style='margin-right: 3%'),
                    ui.output_table("finance", style='margin-right: 3%')
                ),
+               ui.panel_conditional('input.finmarket',
+                                    ui.div(
+                                        {"style": 'display: flex;'},
+                                        ui.output_table("property_table", style='margin-right: 3%'),
+                                        ui.output_table("property_table_shares", style='margin-right: 3%'),
+                                    )
+                                    )
                )
         ,
         ui.nav(

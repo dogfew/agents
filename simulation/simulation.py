@@ -16,6 +16,7 @@ class Simulation:
                  market,
                  firms,
                  consumers,
+                 stock_market=None,
                  base_income=lambda x: x * 10,
                  random_seed=0):
         """
@@ -28,6 +29,7 @@ class Simulation:
         self.firms = firms
         self.consumers = consumers
         self.market = market
+        self.stock_market = stock_market
         self.base_income = base_income
         self.n_firms = self.market.n_firms
         self.n_commodities = self.market.n_commodities
@@ -67,7 +69,7 @@ class Simulation:
                 self.rng.shuffle(agents_range)
 
     def process_agent_step(self, agent):
-        agent.step(self.market)
+        agent.step(self.market, self.stock_market)
 
     def step(self, agents_range=None, shuffle=True):
         """
@@ -103,6 +105,7 @@ class Simulation:
         self.history['limits'].append(l_current.sum(axis=0))
         self.history['finance'].append(f_current.sum(axis=0))
         self.history['gains'].append(g_current.sum(axis=0))
+        # self.history['profit_rate'].append(g_current.sum(axis=0))
 
         self.total_steps += 1
 
@@ -163,6 +166,7 @@ class SimulationGovernment(Simulation):
                  market,
                  firms,
                  consumers,
+                 stock_market=None,
                  base_income=lambda x: x * 10,
                  random_seed=0,
                  profit_tax=0,
@@ -178,7 +182,12 @@ class SimulationGovernment(Simulation):
         :param direct_tax_consumer: Доля прямого налогообложения потребителей
         :param taxation_border: Барьер для налогообложения
         """
-        super().__init__(market, firms, consumers, base_income, random_seed)
+        super().__init__(market,
+                         firms,
+                         consumers,
+                         stock_market,
+                         base_income,
+                         random_seed)
         self.profit_tax = profit_tax
         self.profit_taxation_border = profit_taxation_border
         self.direct_taxation_border = direct_taxation_border
@@ -205,4 +214,4 @@ class SimulationGovernment(Simulation):
                 taxed = agent.financial_resources * self.direct_tax_firm
                 agent.financial_resources -= taxed
                 self.market.gains += taxed * weights
-        agent.step(self.market)
+        agent.step(self.market, self.stock_market)

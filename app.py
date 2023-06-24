@@ -5,6 +5,7 @@ import pandas as pd
 from shinywidgets import register_widget
 from consumers.base_consumer import BaseConsumer
 from market import Market
+from market.market import StockMarket
 from simulation import Simulation, SimulationGovernment
 from firms import ComplexSellFirm, ComplexFirm, RegulatedFirm
 from io import StringIO
@@ -17,7 +18,7 @@ from plotly.subplots import make_subplots
 
 import plotly.express as px
 
-simplefilter('ignore')
+# simplefilter('ignore')
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -114,7 +115,7 @@ def server(input, output, session):
         for j in range(1, 4):
             fig.add_scatter(y=[], row=i, col=j)
 
-    fig.update_layout(height=1000, width=1700, title_text='Секторальные графики', paper_bgcolor='white',
+    fig.update_layout(title_text='Секторальные графики', paper_bgcolor='white',
                       plot_bgcolor='white')
     fig.update_xaxes(gridcolor='black')
     fig.update_yaxes(gridcolor='black')
@@ -376,14 +377,20 @@ def server(input, output, session):
             if input.set_target_price() and input.regulation():
                 market_._p_matrix *= target_price_vector_reactive()
             consumers_ = []
+            stock_market_ = None
             if input.consumers():
-                consumers_ = [BaseConsumer(utility_matrix=utility_reactive().flatten(), id_=j)
+                mpcs = np.arange(input.mpc()[0], input.mpc()[1] + 1) / 100
+                consumers_ = [BaseConsumer(utility_matrix=utility_reactive().flatten(),
+                                           mpc=rng.choice(mpcs), id_=j)
                               for j in range(n_consumers())]
+                stock_market_ = StockMarket(n_firms=len(firms), n_consumers=len(consumers_))
+                stock_market_.shareholders += 1
             if input.set_taxation() and input.regulation():
                 simulation_ = SimulationGovernment(
-                    market_,
-                    firms,
-                    consumers_,
+                    market=market_,
+                    firms=firms,
+                    consumers=consumers_,
+                    stock_market=stock_market_,
                     base_income=lambda x: x * input.base_income(),
                     profit_tax=input.profit_tax() / 100,
                     direct_tax_firm=input.direct_tax_firm() / 100,
@@ -392,7 +399,11 @@ def server(input, output, session):
                     soft_weights=input.soft_weights()
                 )
             else:
-                simulation_ = Simulation(market_, firms, consumers_, base_income=lambda x: x * input.base_income())
+                simulation_ = Simulation(market=market_,
+                                         firms=firms,
+                                         consumers=consumers_,
+                                         stock_market=stock_market_,
+                                         base_income=lambda x: x * input.base_income())
             simulation_reactive.set(simulation_)
             history.set(simulation_reactive().history.copy())
             ui.notification_show("Модель успешно сконфигурирована!", type='message')
@@ -429,6 +440,7 @@ def server(input, output, session):
                                                            showlegend=False,
                                                            marker={'color': color}), row=2, col=i + 1)
         except Exception as e:
+            print(e)
             ui.notification_show(f"Модель не удалось сконфигурировать! {e}", type='error')
 
     @reactive.Effect
@@ -466,6 +478,27 @@ def server(input, output, session):
         df.columns = pd.MultiIndex.from_tuples([('Объёмы', f'{i}') for i in prod_names()])
         return df
 
+    @output
+    @render.table(index=True)
+    def property_table():
+        history()
+        df = pd.DataFrame(simulation_reactive().stock_market.shareholders)
+        df.loc[-1] = df.sum(axis=0)
+        df.index = [f'Фирма {i}' for i in df.index[:-1]] + ['Итого']
+        df.columns = pd.MultiIndex.from_tuples([('Суммарные вложения',
+                                                 f'Потребитель {i}') for i in range(len(df.columns))])
+        return df
+
+    @output
+    @render.table
+    def property_table_shares():
+        history()
+        df = pd.DataFrame(simulation_reactive().stock_market.weights)
+        df.loc[-1] = df.sum(axis=0)
+        df.index = [f'Фирма {i}' for i in df.index[:-1]] + ['Итого']
+        df.columns = pd.MultiIndex.from_tuples([('Доли собственности',
+                                                 f'Потребитель {i}') for i in range(len(df.columns))])
+        return df
     @output
     @render.table(index=True)
     def finance():
