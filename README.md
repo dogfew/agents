@@ -84,7 +84,7 @@ s.t. \sum_{ij} V_{ij} \cdot P_{ij} \le \text{firms\_budget} \cdot \text{prod\_pr
 Фирмы меняют цены в зависимости от изменения спроса. Они могут менять его либо линейно, либо
 на заранее определённую величину.
 ```math
-p^{t} =
+p_{t} =
 \begin{cases}
 p_{t-1} \cdot (1 + \sigma(\frac{D_{t-1} - D_{t-2}}{D_{t-2}}) - 0.5) & \text{'Линейный' случай} \\
 p_{t-1} + \delta \frac{D_{t-1} - D_{t-2}}{D_{t-2}} & \text{Иначе}
