@@ -15,7 +15,7 @@ shiny run --reload
 
 В данной работе моделируется экономика, где производство задано с помощью матрРынок представляет из себя среду, где фирмы взаимодействуют между собой. Там хранятся произведённые каждой фирмой
 товары в матрице
-$ V \\in \\mathbb{R}^{\\text{n_firms} \\times \\text{n_commodities}} $
+$` V \\in \\mathbb{R}^{\\text{n_firms} \\times \\text{n_commodities}} `$
 а также назначенные каждой фирмой цены в матрице
 $ P \\in \\mathbb{R}^{\\text{n_firms} \\times \\text{n_commodities}} $
 
