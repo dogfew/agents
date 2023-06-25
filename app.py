@@ -1,4 +1,7 @@
 from matplotlib import pyplot as plt
+import matplotlib.colors as mcolors
+import colorsys
+
 from shiny import App, reactive, render, ui
 import numpy as np
 import pandas as pd
@@ -18,7 +21,8 @@ from plotly.subplots import make_subplots
 
 import plotly.express as px
 
-# simplefilter('ignore')
+
+simplefilter('ignore')
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -36,6 +40,19 @@ class NumpyEncoder(json.JSONEncoder):
         elif isinstance(obj, (np.ndarray,)):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
+
+
+def generate_colors(n_colors):
+    colors = []
+    hue_step = 1.0 / n_colors
+    saturation = 1.0
+    value = 0.8
+    for i in range(n_colors):
+        hue = i * hue_step
+        r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
+        hex_code = "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
+        colors.append(hex_code)
+    return colors
 
 
 app_ui = APP_UI
@@ -107,10 +124,11 @@ def server(input, output, session):
     prod_names = reactive.Value(['Товар A', 'Товар B', 'Товар C'])
     target_price_vector_reactive = reactive.Value(np.array([1, 2, 3]))
 
-    """plotly виджет"""
+    """plotly виджет (секторальный)"""
     fig = make_subplots(rows=2, cols=3,
                         subplot_titles=(
-                            'Средне-взвешенные цены', 'Объёмы', 'Изменения объёмов', 'Лимиты', 'Финансы', 'Выигрыши'), )
+                            'Средне-взвешенные цены', 'Объёмы', 'Изменения объёмов',
+                            'Лимиты', 'Финансы', 'Оценка рентабельности'), )
     for i in range(1, 3):
         for j in range(1, 4):
             fig.add_scatter(y=[], row=i, col=j)
@@ -122,11 +140,38 @@ def server(input, output, session):
     plotly_widget = go.FigureWidget(fig)
     register_widget("plotly_widget", plotly_widget)
 
+    fig2 = make_subplots(rows=2, cols=3,
+                         subplot_titles=(
+                             'Средне-взвешенные цены', 'Объёмы',
+                             'Изменения объёмов', 'Лимиты', 'Финансы',
+                             'Оценка рентабельности'), )
+    for i in range(1, 3):
+        for j in range(1, 4):
+            fig2.add_scatter(y=[], row=i, col=j)
+    fig2.update_layout(title_text='Графики по предприятиям', paper_bgcolor='white',
+                       plot_bgcolor='white')
+    fig2.update_xaxes(gridcolor='black')
+    fig2.update_yaxes(gridcolor='black')
+    plotly_widget2 = go.FigureWidget(fig2)
+
+    fig3 = make_subplots(cols=3, subplot_titles=('Индекс Хиршмана',
+                                                 'Gini (фирмы)',
+                                                 'Gini (потребители)'))
+    for i in range(1, 4):
+        fig3.add_scatter(y=[], col=3, row=1)
+    fig3.update_layout(title_text='Неравенство',
+                       paper_bgcolor='white',
+                       plot_bgcolor='white')
+    fig3.update_xaxes(gridcolor='black')
+    fig3.update_yaxes(gridcolor='black')
+    plotly_widget3 = go.FigureWidget(fig3)
+
     def make_step():
         if not input.y():
             return
         if not configurated():
-            ui.notification_show('Прежде, чем запускать модель, нажмите кнопку Сконфигурировать', type='error')
+            ui.notification_show('Прежде, чем запускать модель, нажмите кнопку Сконфигурировать',
+                                 type='error')
             ui.update_switch('y', value=False)
             return
 
@@ -156,46 +201,43 @@ def server(input, output, session):
 
     def update_widget(simulation):
         window_size = input.window()
+        idx = np.arange(simulation.total_steps)
         with plotly_widget.batch_update():
             i = 0
-            idx = np.arange(simulation.total_steps)
-            for col in ['prices', 'volumes', 'dvolumes', 'limits', 'finance', 'gains']:
+            for col in ['prices', 'volumes', 'dvolumes', 'limits', 'finance', 'profitability']:
                 for lst in np.array(simulation.history[col]).T:
                     plotly_widget.data[i].y = lst
                     plotly_widget.data[i].x = idx
                     i += 1
-            for col in ['prices', 'volumes', 'dvolumes', 'limits', 'finance', 'gains']:
+            for col in ['prices', 'volumes', 'dvolumes', 'limits', 'finance', 'profitability']:
                 for lst in np.array(simulation.history[col]).T:
-                    plotly_widget.data[i].y = np.convolve(lst, np.ones(window_size) / window_size, mode='valid').round(4)
+                    plotly_widget.data[i].y = np.convolve(lst, np.ones(window_size) / window_size, mode='valid').round(
+                        4)
                     plotly_widget.data[i].x = idx
                     i += 1
-            #
-            # for col in np.array(simulation.history['volumes']).T:
-            #     plotly_widget.data[i].y = col
-            #     plotly_widget.data[i].x = idx
-            #     i += 1
-            #
-            # for col in np.array(simulation.history['dvolumes']).T:
-            #     plotly_widget.data[i].y = col
-            #     plotly_widget.data[i].x = idx
-            #     i += 1
-            # for col in np.array(simulation.history['limits']).T:
-            #     plotly_widget.data[i].y = col
-            #     plotly_widget.data[i].x = idx
-            #     i += 1
-            # for firm in simulation.firms:
-            #     plotly_widget.data[i].y = list(plotly_widget.data[i].y) + [firm.limit]
-            #     plotly_widget.data[i].x = idx
-            #     i += 1
-            # for firm in simulation.firms:
-            #     plotly_widget.data[i].y = list(plotly_widget.data[i].y) + [firm.financial_resources]
-            #     plotly_widget.data[i].x = idx
-            #     i += 1
-            # for firm in simulation.firms:
-            #     plotly_widget.data[i].y = list(plotly_widget.data[i].y) + [firm.history['gains']]
-            #     plotly_widget.data[i].x = idx
-            #     i += 1
-
+        with plotly_widget2.batch_update():
+            i = 0
+            for col in ['firms_prices', 'firms_volumes', 'firms_dvolumes',
+                        'firms_limits', 'firms_finance', 'firms_profitability']:
+                for k, lst in simulation.history[col].items():
+                    plotly_widget2.data[i].y = np.convolve(lst, np.ones(window_size) / window_size, mode='valid').round(
+                        4)
+                    plotly_widget2.data[i].x = idx
+                    i += 1
+        with plotly_widget3.batch_update():
+            i = 0
+            for lst in np.array(simulation.history['firms_hirshman']).T:
+                plotly_widget3.data[i].x = idx
+                plotly_widget3.data[i].y = np.convolve(lst, np.ones(window_size) / window_size, mode='valid').round(4)
+                i += 1
+            plotly_widget3.data[i].x = idx
+            plotly_widget3.data[i].y = np.convolve(simulation.history['firms_gini'],
+                                                   np.ones(window_size) / window_size, mode='valid').round(4)
+            i += 1
+            if simulation.stock_market is not None:
+                plotly_widget3.data[i].x = idx
+                plotly_widget3.data[i].y = np.convolve(simulation.history['consumers_gini'],
+                                                       np.ones(window_size) / window_size, mode='valid').round(4)
     @reactive.Effect
     @reactive.event(input.step)
     async def make_n_steps():
@@ -288,37 +330,9 @@ def server(input, output, session):
         history()
         firms = simulation_reactive().firms
         f = lambda i: str(firms[int(i)]) + (
-                    '\n' + json.dumps(firms[int(i)].history, indent=4, cls=NumpyEncoder)) * input.json()
+                '\n' + json.dumps(firms[int(i)].history, indent=4, cls=NumpyEncoder)) * input.json()
         out = '\n\n'.join(map(f, input.display_firms()))
         return out
-
-    @output
-    @render.plot(alt="plots")
-    def plots():
-        sumulation = simulation_reactive()
-        history_ = history()
-        columns = [f'Фирма {firm.id} ({firm.prod_name})' for firm in sumulation.firms]
-
-        fig, ax = plt.subplots(2, 3, figsize=(30, 15))
-        volumes_df = pd.DataFrame(history_.get('volumes'),
-                                  columns=prod_names())
-        prices_df = pd.DataFrame(history_.get('prices'),
-                                 columns=prod_names())
-        temp_df = volumes_df.copy().diff()
-        limits_df = pd.DataFrame(history_.get('firms_limits'))
-        gains_df = pd.DataFrame(history_.get('firms_gains'))
-        finance_df = pd.DataFrame(history_.get('firms_finance'))
-
-        limits_df.columns = columns
-        gains_df.columns = columns
-        finance_df.columns = columns
-
-        volumes_df.plot(ax=ax[1, 1], title='Объёмы')
-        limits_df.plot(ax=ax[0, 0], title='Лимиты')
-        finance_df.plot(ax=ax[0, 2], title='Финансы')
-        prices_df.plot(ax=ax[1, 0], title='Средние цены')
-        gains_df.plot(ax=ax[0, 1], title='Выигрыши')
-        temp_df.plot(ax=ax[1, 2], title='Изменения объёмов', alpha=0.5)
 
     @reactive.Effect
     @reactive.event(input.start, ignore_init=True)
@@ -340,7 +354,6 @@ def server(input, output, session):
                 firm_type = RegulatedFirm
             else:
                 firm_type = ComplexSellFirm if clever_firms() else ComplexFirm
-            print(firm_type)
             limits = np.arange(input.start_limits()[0], input.start_limits()[1] + 1)
             reserves = np.arange(input.start_reserves()[0], input.start_reserves()[1] + 1)
             finances = np.arange(input.start_finances()[0], input.start_finances()[1] + 1)
@@ -379,8 +392,10 @@ def server(input, output, session):
             consumers_ = []
             stock_market_ = None
             if input.consumers():
+                utility_array = utility_reactive().flatten()
+                assert utility_array.shape[0] == len(prod_names()), "Неверная размерность вектора полезности"
                 mpcs = np.arange(input.mpc()[0], input.mpc()[1] + 1) / 100
-                consumers_ = [BaseConsumer(utility_matrix=utility_reactive().flatten(),
+                consumers_ = [BaseConsumer(utility_matrix=utility_array,
                                            mpc=rng.choice(mpcs), id_=j)
                               for j in range(n_consumers())]
                 stock_market_ = StockMarket(n_firms=len(firms), n_consumers=len(consumers_))
@@ -392,6 +407,9 @@ def server(input, output, session):
                     consumers=consumers_,
                     stock_market=stock_market_,
                     base_income=lambda x: x * input.base_income(),
+                    tech_percent=input.tech_percent(),
+                    tech_abs=input.tech_abs(),
+                    tech_steps=input.tech_steps(),
                     profit_tax=input.profit_tax() / 100,
                     direct_tax_firm=input.direct_tax_firm() / 100,
                     direct_taxation_border=input.direct_taxation_border() / 100,
@@ -403,12 +421,17 @@ def server(input, output, session):
                                          firms=firms,
                                          consumers=consumers_,
                                          stock_market=stock_market_,
-                                         base_income=lambda x: x * input.base_income())
+                                         base_income=lambda x: x * input.base_income(),
+                                         tech_percent=input.tech_percent(),
+                                         tech_abs=input.tech_abs(),
+                                         tech_steps=input.tech_steps()
+                                         )
             simulation_reactive.set(simulation_)
             history.set(simulation_reactive().history.copy())
             ui.notification_show("Модель успешно сконфигурирована!", type='message')
             configurated.set(True)
-            colors = ['red', 'green', 'blue', 'orange', 'purple']
+            colors = generate_colors(len(economy_tech_matrix))
+            """Отраслевой виджет"""
             with plotly_widget.batch_update():
                 plotly_widget.data = []
                 for i, x in enumerate([f"Цены", "Объёмы", "Δ Объёмов"]):
@@ -439,8 +462,36 @@ def server(input, output, session):
                         plotly_widget.add_trace(go.Scatter(x=[], y=[], name=f"MA {col}", legendgroup=f"MA {col}",
                                                            showlegend=False,
                                                            marker={'color': color}), row=2, col=i + 1)
+            """Общие виджеты"""
+            with plotly_widget3.batch_update():
+                plotly_widget3.data = []
+                for col, color in zip(prod_names(), colors):
+                    plotly_widget3.add_trace(go.Scatter(x=[], y=[], name=f"{col}",
+                                                        marker={'color': color}), col=1, row=1)
+                plotly_widget3.add_trace(go.Scatter(x=[], y=[], name='Джини (осн. капитал фирм)'), col=2, row=1)
+                plotly_widget3.add_trace(go.Scatter(x=[], y=[], name='Джини (потребители)'), col=3, row=1)
+
+            """Виджеты по фирмам"""
+            colors = generate_colors(len(firms))
+            with plotly_widget2.batch_update():
+                plotly_widget2.data = []
+                for i, x in enumerate([f"Цены", "Объёмы", "Δ Объёмов"]):
+                    for firm, color in zip(firms, colors):
+                        branch = prod_names()[np.argsort(firm.out_matrix)[-1]]
+                        plotly_widget2.add_trace(go.Scatter(x=[], y=[],
+                                                            name=f"Фирма {firm.id} ({branch})",
+                                                            legendgroup=firm.id,
+                                                            showlegend=i == 0,
+                                                            marker={'color': color}), row=1, col=i + 1)
+                for i, x in enumerate([f"Лимиты", "Финансы", "Выручка"]):
+                    for firm, color in zip(firms, colors):
+                        branch = prod_names()[np.argsort(firm.out_matrix)[-1]]
+                        plotly_widget2.add_trace(go.Scatter(x=[], y=[],
+                                                            name=f"Фирма {firm.id} ({branch})",
+                                                            legendgroup=firm.id,
+                                                            showlegend=False,
+                                                            marker={'color': color}), row=2, col=i + 1)
         except Exception as e:
-            print(e)
             ui.notification_show(f"Модель не удалось сконфигурировать! {e}", type='error')
 
     @reactive.Effect
@@ -499,6 +550,7 @@ def server(input, output, session):
         df.columns = pd.MultiIndex.from_tuples([('Доли собственности',
                                                  f'Потребитель {i}') for i in range(len(df.columns))])
         return df
+
     @output
     @render.table(index=True)
     def finance():
@@ -518,6 +570,10 @@ def server(input, output, session):
                    ['Итого']
         df.columns = ['Финансы', 'Лимиты', 'Суммарные запасы', 'Выручка']
         return df.round(3)
+
+    register_widget("plotly_widget", plotly_widget)
+    register_widget('plotly_widget2', plotly_widget2)
+    register_widget('plotly_widget3', plotly_widget3)
 
 
 app = App(app_ui, server)

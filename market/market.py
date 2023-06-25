@@ -31,6 +31,7 @@ class Market:
         weights = self.volume_matrix
         weights /= weights.sum(axis=0)
         res = np.nansum(self._p_matrix * weights, axis=0)
+        res = np.where(res > 0, res, self.MIN_PRICE)
         return res
 
     @property
@@ -124,6 +125,7 @@ class StockMarket:
         self._profits = np.zeros((n_firms, n_consumers))
         self.shareholders = np.zeros((n_firms, n_consumers))
         self.profits_history = np.zeros(n_firms)
+        self.consumers_income = np.zeros(n_consumers)
 
     @property
     def weights(self):
@@ -132,6 +134,7 @@ class StockMarket:
     def process_gains(self, consumer_id):
         gains = self._profits[:, consumer_id].sum()
         self._profits[:, consumer_id] = 0
+        self.consumers_income[consumer_id] = gains.round(4)
         return gains
 
     def add_profit(self, firm_id, total_profit):

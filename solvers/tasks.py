@@ -14,8 +14,6 @@ def firms_investment_only_problem(volumes, firm, prices_flatten, prices_mean, de
     _, gain = firm.test_investment(firm.reserves + v_reshaped)
     cost = prices_flatten @ volumes
     gain_per_limit = firm.history['gains'] / np.maximum(firm.limits_history[-1], 1)
-    # if gain == 0 and firm.limit < 2:
-    #     return 0.001
     return - gain * firm.deprecation_steps * np.maximum(gain_per_limit, 1) + cost * 1e-6
 
 

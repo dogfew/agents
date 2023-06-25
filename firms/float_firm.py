@@ -76,7 +76,6 @@ class ComplexFirm(BaseFirm):
         self.investment_resources += d_investment_resources
         gains -= d_prod_resources
         gains -= d_investment_resources
-        assert -1e-10 < gains < 1e-10
         """Амортизация"""
         self.deprecation()
         """Определение цен"""

@@ -57,6 +57,7 @@ class BaseFirm:
             'previous_volumes': np.zeros_like(out_matrix),
             'previous_produced': None,
             'previous_demand': 0,
+            'floating_capital': 0
         }
         self.min_limit = 0
 
@@ -135,6 +136,8 @@ class BaseFirm:
         self.financial_resources -= total_cost
         self.reserves += new_reserves
 
+        if mode in ['profit', 'production']:
+            self.history['floating_capital'] = total_cost
         # обновить атрибуты рынка
         market.process_purchases(purchase_matrix, sellers_gains)
 
