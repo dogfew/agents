@@ -62,11 +62,14 @@ class ComplexFirm(BaseFirm):
         self.gains_history.append(gains)
         self.limits_history.append(self.limit)
         """Распределение прибылей"""
-        if self.profit_rate != 0:
+        if self.profit_rate != 0 and stock_market is not None:
             total_profit = gains * self.profit_rate
             gains -= total_profit
             stock_market.add_profit(firm_id=self.id,
                                     total_profit=total_profit)
+            if np.allclose(stock_market.shareholders[self.id], 0):
+                gains += total_profit
+                stock_market._profits[self.id] = 0
         d_prod_resources = gains * self.production_rate
         d_investment_resources = gains * self.investment_rate
         self.production_resources += d_prod_resources

@@ -95,7 +95,7 @@ APP_UI = ui.page_fluid(
                                                             value=(100, 100), min=0, max=100),
                                             ui.input_slider("production_percent", "Доля финансов на производство",
                                                             value=(80, 80), min=0, max=100),
-                                            ui.input_switch("invest_anyway", "Не ограничивать объём инвестиций")
+                                            ui.input_switch("invest_anyway", "Не ограничивать объём инвестиций", True)
 
                                             ),
                        ui.input_switch('advanced_sliders_market', "Продвинутые настройки рынка", value=False),
@@ -122,8 +122,6 @@ APP_UI = ui.page_fluid(
                                             ui.input_slider("n_consumers", "Количество потребителей", value=2, min=0,
                                                             max=10),
                                             ui.input_slider("base_income", "Базовый доход (в благах)",
-                                                            min=0, max=100, value=0),
-                                            ui.input_slider("base_income", "Уровень удовлетворения",
                                                             min=0, max=100, value=0),
                                             ui.div(
                                                 {'style': 'margin-left: 1%; display: flex;'},
@@ -203,7 +201,7 @@ APP_UI = ui.page_fluid(
                    ui.output_table("market_prices", style='margin-right: 3%'),
                    ui.output_table("finance", style='margin-right: 3%')
                ),
-               ui.panel_conditional('input.finmarket',
+               ui.panel_conditional('input.finmarket & input.consumers',
                                     ui.div(
                                         {"style": 'display: flex;'},
                                         ui.output_table("property_table", style='margin-right: 3%'),

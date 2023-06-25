@@ -384,7 +384,7 @@ def server(input, output, session):
                                            mpc=rng.choice(mpcs), id_=j)
                               for j in range(n_consumers())]
                 stock_market_ = StockMarket(n_firms=len(firms), n_consumers=len(consumers_))
-                stock_market_.shareholders += 1
+                stock_market_.shareholders += 0.001
             if input.set_taxation() and input.regulation():
                 simulation_ = SimulationGovernment(
                     market=market_,
