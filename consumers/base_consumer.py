@@ -59,9 +59,7 @@ class BaseConsumer:
         Посмотреть на значение функции полезности при данных закупках
         :return:
         """
-        print("reserves", reserves)
         non_zero = self.utility_matrix != 0
-        print('non-zero', non_zero)
         proportions = reserves[non_zero] / self.utility_matrix[non_zero]
         utility_value: int | float = np.minimum(np.maximum(-logsumexp(-proportions), 0), self.satisfaction_level)
         input_reserves = utility_value * self.utility_matrix
