@@ -2,6 +2,10 @@
 
 ## Запуск
 
+Надо склонировать репозиторий:
+```
+git clone https://github.com/dogfew/agents
+```
 Для запуска нужен Python, а также установленные библиотеи из `requirements.txt`: shiny, shinywidgets, plotly, numpy, scipy и т.д.
 Установка зависимостей:
 
