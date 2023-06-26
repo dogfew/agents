@@ -407,9 +407,9 @@ def server(input, output, session):
                     consumers=consumers_,
                     stock_market=stock_market_,
                     base_income=lambda x: x * input.base_income(),
-                    tech_percent=input.tech_percent(),
-                    tech_abs=input.tech_abs(),
-                    tech_steps=input.tech_steps(),
+                    tech_percent=input.tech_percent() if input.tech_progress() else 0,
+                    tech_abs=input.tech_abs() if input.tech_progress() else 0,
+                    tech_steps=input.tech_steps() if input.tech_progress() else 0,
                     profit_tax=input.profit_tax() / 100,
                     direct_tax_firm=input.direct_tax_firm() / 100,
                     direct_taxation_border=input.direct_taxation_border() / 100,
@@ -422,9 +422,9 @@ def server(input, output, session):
                                          consumers=consumers_,
                                          stock_market=stock_market_,
                                          base_income=lambda x: x * input.base_income(),
-                                         tech_percent=input.tech_percent(),
-                                         tech_abs=input.tech_abs(),
-                                         tech_steps=input.tech_steps()
+                                         tech_percent=input.tech_percent() if input.tech_progress() else 0,
+                                         tech_abs=input.tech_abs() if input.tech_progress() else 0,
+                                         tech_steps=input.tech_steps() if input.tech_progress() else 0,
                                          )
             simulation_reactive.set(simulation_)
             history.set(simulation_reactive().history.copy())
