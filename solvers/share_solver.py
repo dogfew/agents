@@ -17,6 +17,4 @@ def solve_share_problem(consumer, stock_market):
                    x0=np.full(n_firms, 1 / n_firms),
                    constraints={'type': 'eq', 'fun': lambda x: x.sum() - 1},
                    bounds=Bounds(0, 1, keep_feasible=True))
-    print("Shares", res.x.round(4) * budget)
-    print(n_firms)
     return res.x * budget
